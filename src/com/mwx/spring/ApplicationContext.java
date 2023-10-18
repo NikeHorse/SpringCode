@@ -97,11 +97,21 @@ public class ApplicationContext {
         try {
             Object instance = clazz.getConstructor().newInstance();
             for (Field declaredField : clazz.getDeclaredFields()) {
-                if (declaredField.isAnnotationPresent(Autowired.class)){
+                if (declaredField.isAnnotationPresent(Autowired.class)) {
                     declaredField.setAccessible(true);
-                    declaredField.set(instance,getBean(declaredField.getName()));
+                    declaredField.set(instance, getBean(declaredField.getName()));
                 }
             }
+            //实现Aware回调
+            if (instance instanceof BeanNameAware) {
+                ((BeanNameAware) instance).setBeanName(beanName);
+            }
+            //初始化
+            if (instance instanceof InitializingBean) {
+                ((InitializingBean) instance).afterPropertiesSet();
+            }
+            //初始化后 AOP BeanPostProcessor
+
             return instance;
         } catch (Exception e) {
             return null;

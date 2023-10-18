@@ -14,5 +14,6 @@ public class ApplicationRunner {
         //调用getBean()方法
         UserService userService = (UserService) context.getBean("userService");
         userService.test();
+
     }
 }
