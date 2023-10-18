@@ -2,6 +2,7 @@ package com.mwx.spring;
 
 import java.beans.Introspector;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -88,11 +89,19 @@ public class ApplicationContext {
 
     /**
      * 创建单例Bean对象
+     *
+     * <p color=red>模仿bean的生命周期</p>
      */
     private Object createBean(String beanName, BeanDefinition beanDefinition) {
         Class clazz = beanDefinition.getType();
         try {
             Object instance = clazz.getConstructor().newInstance();
+            for (Field declaredField : clazz.getDeclaredFields()) {
+                if (declaredField.isAnnotationPresent(Autowired.class)){
+                    declaredField.setAccessible(true);
+                    declaredField.set(instance,getBean(declaredField.getName()));
+                }
+            }
             return instance;
         } catch (Exception e) {
             return null;

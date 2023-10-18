@@ -1,5 +1,6 @@
 package com.mwx.service;
 
+import com.mwx.spring.Autowired;
 import com.mwx.spring.Component;
 import com.mwx.spring.Scope;
 
@@ -7,4 +8,13 @@ import com.mwx.spring.Scope;
 @Scope("prototype")
 public class UserService {
 
+    /**
+     * 依赖注入
+     */
+    @Autowired
+    private ProductService productService;
+
+    public void test() {
+        System.out.println(productService);
+    }
 }
