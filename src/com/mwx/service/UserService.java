@@ -4,7 +4,7 @@ import com.mwx.spring.*;
 
 @Component
 @Scope("prototype")
-public class UserService implements BeanNameAware, InitializingBean {
+public class UserService implements BeanNameAware, InitializingBean, UserInterface {
 
     /**
      * 依赖注入

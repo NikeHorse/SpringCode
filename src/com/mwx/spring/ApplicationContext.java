@@ -4,6 +4,7 @@ import java.beans.Introspector;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +24,8 @@ public class ApplicationContext {
      * 单例池
      */
     private ConcurrentHashMap<String, Object> singletonObjects = new ConcurrentHashMap<String, Object>();
+
+    private ArrayList<BeanPostprocessor> beanPostProcessorList = new ArrayList<>();
 
     /**
      * 加载上下文时 扫描＋注册单例/多例Bean
@@ -54,6 +57,11 @@ public class ApplicationContext {
                         try {
                             Class<?> aClass = classLoader.loadClass(fileName);
                             if (aClass.isAnnotationPresent(Component.class)) {
+                                //类是否实现了BeanPostProcessor
+                                if (BeanPostprocessor.class.isAssignableFrom(aClass)) {
+                                    BeanPostprocessor beanPostprocessor = (BeanPostprocessor) aClass.newInstance();
+                                    beanPostProcessorList.add(beanPostprocessor);
+                                }
                                 //有Component注解
                                 BeanDefinition beanDefinition = new BeanDefinition();
                                 beanDefinition.setType(aClass);
@@ -106,12 +114,20 @@ public class ApplicationContext {
             if (instance instanceof BeanNameAware) {
                 ((BeanNameAware) instance).setBeanName(beanName);
             }
+            //初始化前 AOP BeanPostProcessor
+            //可以在 bean 初始化之前进行自定义的处理，比如修改 bean 的属性值，或者执行一些初始化前的逻辑。
+            for (BeanPostprocessor beanPostprocessor : beanPostProcessorList) {
+                beanPostprocessor.postProcessBeforeInitialization(beanName, instance);
+            }
             //初始化
             if (instance instanceof InitializingBean) {
                 ((InitializingBean) instance).afterPropertiesSet();
             }
             //初始化后 AOP BeanPostProcessor
-
+            //在初始化后对 bean 进行一些额外的配置或者增强。
+            for (BeanPostprocessor beanPostprocessor : beanPostProcessorList) {
+                beanPostprocessor.postProcessAfterInitialization(beanName, instance);
+            }
             return instance;
         } catch (Exception e) {
             return null;
